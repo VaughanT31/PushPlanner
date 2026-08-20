@@ -1,0 +1,31 @@
+## Interface: 120100
+## Title: PushPlanner
+## Notes: Set a target Mythic+ rating and see the minimum keys needed to reach it. Concept and math ported with thanks from Mythic Planner (mythicplanner.com) and SamFarah/RatingCalculator (github.com/SamFarah/RatingCalculator).
+## Author: CtrlShift_Zed
+## Version: 0.1.0
+## SavedVariables: PushPlannerDB
+## IconTexture: Interface\AddOns\PushPlanner\Media\icon
+## X-Credits: Mythic Planner (mythicplanner.com); SamFarah/RatingCalculator (MIT)
+## X-License: MIT
+
+Core\Init.lua
+Data\SeasonScoring.lua
+UI\Theme.lua
+UI\Widgets\Window.lua
+UI\Widgets\StatCell.lua
+UI\Widgets\ListRow.lua
+UI\Widgets\EditBox.lua
+UI\Widgets\Checkbox.lua
+UI\Widgets\Dropdown.lua
+UI\Widgets\Button.lua
+UI\Widgets\ProgressBar.lua
+UI\Widgets\Tooltip.lua
+UI\Widgets\Confirm.lua
+Core\Data.lua
+Core\Scoring.lua
+Core\Planner.lua
+Core\MinimapButton.lua
+UI\ResultsCard.lua
+UI\MainWindow.lua
+Settings.lua
+Locales\enUS.lua
