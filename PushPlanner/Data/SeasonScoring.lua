@@ -2,10 +2,12 @@
 -- Per-level base score table for the current season. Update this file, and
 -- only this file, when a new season's scoring model needs a refresh.
 --
--- WARNING: these numbers are the TWW-lineage model (section 8.1 / 11.1 of
--- scope.md). Verify them for Midnight Season 2 (12.1.0) before shipping by
--- back-solving from a couple of known live runs (see Core/Scoring.lua).
-
+-- Verified 2026-08-31 against Mr. Mythical's rating calculator (community
+-- M+ score reference for Midnight Season 2 / 12.1.0): baseByLevel and the
+-- timing-bonus constants below match, except [4] was 200 and should be 185
+-- (fixed here) -- the +30 breakpoint jump belongs at level 5, not 4, to
+-- line up with the +5/+7/+10/+12 affix-bonus levels. overtimeFlat and
+-- GetMin's over-10 floor were not independently confirmed by that source.
 local _, PP = ...
 
 PP.SeasonScoring = {
@@ -15,7 +17,7 @@ PP.SeasonScoring = {
     baseByLevel = {
         [2] = 155,
         [3] = 170,
-        [4] = 200,
+        [4] = 185,
         [5] = 215,
         [6] = 230,
         [7] = 260,

@@ -3,7 +3,6 @@
 -- and re-places itself with cos/sin on load.
 
 local _, PP = ...
-local Theme = PP.Theme
 
 PP.MinimapButton = {}
 local MinimapButton = PP.MinimapButton
@@ -49,9 +48,6 @@ function MinimapButton:Init()
     icon:SetPoint("CENTER", 0, 0)
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
-    local ring = Theme:CreateBorder(button, "OVERLAY")
-    Theme:SetBorderColor(ring, "borderAccent")
-
     button:SetScript("OnDragStart", function()
         button:SetScript("OnUpdate", function()
             local angle = AngleFromCursor()
@@ -72,7 +68,21 @@ function MinimapButton:Init()
     end)
 
     button:SetScript("OnEnter", function()
-        PP.ShowTip(button, "PushPlanner\nLeft-click to plan\nRight-click for settings", "ANCHOR_TOP")
+        local rating = PP.Data.GetOverallRating()
+        local target = PP.db.targetRating or 0
+
+        local message = "PushPlanner\nRating: " .. rating
+        if target > 0 then
+            local gap = target - rating
+            if gap > 0 then
+                message = message .. " (" .. gap .. " to " .. target .. ")"
+            else
+                message = message .. " (target " .. target .. " reached)"
+            end
+        end
+        message = message .. "\nLeft-click to plan\nRight-click for settings"
+
+        PP.ShowTip(button, message, "ANCHOR_TOP")
     end)
     button:SetScript("OnLeave", function()
         PP.HideTip()

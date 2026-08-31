@@ -17,9 +17,11 @@ window, minimap button, settings panel, saved variables, localization
 scaffold and attribution files are all in place.
 
 Not yet done:
-- The Season 2 score constants in `Data/SeasonScoring.lua` are the
-  TWW-lineage model and are flagged there for verification against real
-  12.1.0 runs (see scope.md section 11, risk 1).
+- `Data/SeasonScoring.lua`'s `baseByLevel` table and timing-bonus constants
+  were checked against Mr. Mythical's Midnight Season 2 rating calculator
+  (2026-08-31); one error was found and fixed (level 4 was 200, should be
+  185). `overtimeFlat` and the `GetMin` over-10 floor are still unconfirmed
+  against a live/authoritative source (see scope.md section 11, risk 1).
 - Exact API return signatures in `Core/Data.lua` should be checked against
   the 12.1.0 API dump.
 - Only the addon/minimap icon (`Media/icon.tga`) is custom art so far;

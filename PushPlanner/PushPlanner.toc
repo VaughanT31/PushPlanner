@@ -3,6 +3,7 @@
 ## Notes: Set a target Mythic+ rating and see the minimum keys needed to reach it. Concept and math ported with thanks from Mythic Planner (mythicplanner.com) and SamFarah/RatingCalculator (github.com/SamFarah/RatingCalculator).
 ## Author: CtrlShift_Zed
 ## Version: 0.1.0
+## Category: CtrlShift_Zed
 ## SavedVariables: PushPlannerDB
 ## IconTexture: Interface\AddOns\PushPlanner\Media\icon
 ## X-Credits: Mythic Planner (mythicplanner.com); SamFarah/RatingCalculator (MIT)
