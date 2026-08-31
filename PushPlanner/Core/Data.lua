@@ -44,15 +44,15 @@ function Data.GetBestRun(mapID)
     if not (C_MythicPlus and C_MythicPlus.GetSeasonBestForMap) then
         return nil
     end
-    local score, level, durationSec, timed = C_MythicPlus.GetSeasonBestForMap(mapID)
-    if not score or score == 0 then
+    local info = C_MythicPlus.GetSeasonBestForMap(mapID)
+    if not info or not info.dungeonScore or info.dungeonScore == 0 then
         return nil
     end
     return {
-        score = score,
-        level = level,
-        durationSec = durationSec,
-        timed = timed,
+        score = info.dungeonScore,
+        level = info.level,
+        durationSec = info.durationSec,
+        timed = info.level ~= nil and info.level > 0,
     }
 end
 
