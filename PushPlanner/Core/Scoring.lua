@@ -48,6 +48,22 @@ function Scoring.GetRunScore(time, timeLimit, level)
     return score
 end
 
+-- GetChestLevel(time, timeLimit) - returns the keystone-upgrade ("chest")
+-- tier (1, 2, or 3) a run earns for finishing at `time` against `timeLimit`,
+-- or 0 if it wasn't timed at all.
+function Scoring.GetChestLevel(time, timeLimit)
+    if time > timeLimit then
+        return 0
+    end
+    local pctUnder = (timeLimit - time) / timeLimit
+    if pctUnder >= S.chestThresholds[3] then
+        return 3
+    elseif pctUnder >= S.chestThresholds[2] then
+        return 2
+    end
+    return 1
+end
+
 -- metricsForScore(wanted) - section 8.4. Returns level, base.
 function Scoring.MetricsForScore(wanted)
     if wanted > 380 then

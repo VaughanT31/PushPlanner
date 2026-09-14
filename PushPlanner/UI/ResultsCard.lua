@@ -17,6 +17,13 @@ local function FormatTime(seconds)
     return string.format("%d:%02d", mins, secs)
 end
 
+local function ChestLabel(chestLevel)
+    if chestLevel == 0 then
+        return "not timed"
+    end
+    return chestLevel .. (chestLevel == 1 and " chest" or " chests")
+end
+
 local function AffixIcons(dungeonAffixes)
     local icons = {}
     for _, affix in ipairs(dungeonAffixes or {}) do
@@ -25,7 +32,7 @@ local function AffixIcons(dungeonAffixes)
     return icons
 end
 
--- option: { runs = { { dungeon, level, time, newScore, oldScore }, ... }, dungeonCount }
+-- option: { runs = { { dungeon, level, time, newScore, oldScore, chestLevel }, ... }, dungeonCount }
 function ResultsCard.New(parent, option, index, isLast, affixes)
     local titleLabel = index == 1 and "Option 1 (Fastest)" or ("Option " .. index)
     if isLast then
@@ -51,7 +58,7 @@ function ResultsCard.New(parent, option, index, isLast, affixes)
         end
 
         row.nameText:SetText(run.dungeon.name or "?")
-        row.subText:SetText(string.format("Key %d - complete in %s (or faster)", run.level, FormatTime(run.time)))
+        row.subText:SetText(string.format("Key %d - complete in %s (or faster) - %s", run.level, FormatTime(run.time), ChestLabel(run.chestLevel)))
         row.iconStrip:SetIcons(AffixIcons(affixes))
         row.valueDelta:SetValueDelta(math.floor(run.newScore + 0.5), math.floor(run.newScore - run.oldScore + 0.5))
         row:SetAccentColor("borderAccent")

@@ -97,6 +97,7 @@ function Planner.Plan(dungeons, current, target, avoidSet, maxLevel)
                     time = time,
                     newScore = newScore,
                     oldScore = d.score,
+                    chestLevel = Scoring.GetChestLevel(time, d.timeLimit),
                 })
             end
         end

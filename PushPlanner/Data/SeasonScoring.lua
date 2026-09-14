@@ -36,4 +36,9 @@ PP.SeasonScoring = {
     timingWeight = 37.5,
     timingCapPct = 0.4,
     overtimeFlat = 15,
+
+    -- Keystone upgrade ("chest") tiers: fraction of the timer saved needed
+    -- to earn each tier. Tier 3's threshold matches timingCapPct by design
+    -- (the timing-score bonus and the 3rd upgrade cap out at the same pace).
+    chestThresholds = { [2] = 0.2, [3] = 0.4 },
 }
