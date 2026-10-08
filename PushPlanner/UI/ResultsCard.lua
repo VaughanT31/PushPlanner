@@ -7,7 +7,7 @@ local Theme = PP.Theme
 PP.ResultsCard = {}
 local ResultsCard = PP.ResultsCard
 
-local ROW_HEIGHT = 30
+local ROW_HEIGHT = 40
 local ROW_GAP = 4
 local TITLE_HEIGHT = 20
 
@@ -22,6 +22,20 @@ local function ChestLabel(chestLevel)
         return "not timed"
     end
     return chestLevel .. (chestLevel == 1 and " chest" or " chests")
+end
+
+local function Hex(colorKey)
+    local c = Theme.colors[colorKey]
+    return string.format("%02x%02x%02x", c[1] * 255, c[2] * 255, c[3] * 255)
+end
+
+-- "+12  |  under 33:00  |  2 chests", key level in the title gold so it's the first thing
+-- the eye lands on, separators dimmed so they don't compete with the values.
+local function RunDetails(run)
+    -- "||" is an escaped literal pipe, then "|r" closes the colour.
+    local sep = "  |cff" .. Hex("accentDefault") .. "|||r  "
+    return string.format("|cff%s+%d|r%sunder %s%s%s",
+        Hex("textTitle"), run.level, sep, FormatTime(run.time), sep, ChestLabel(run.chestLevel))
 end
 
 local function AffixIcons(dungeonAffixes)
@@ -49,7 +63,12 @@ function ResultsCard.New(parent, option, index, isLast, affixes)
     local rows = {}
     local prev
     for _, run in ipairs(option.runs) do
-        local row = PP.Widgets.ListRow.New(card, { height = ROW_HEIGHT })
+        local row = PP.Widgets.ListRow.New(card, {
+            height = ROW_HEIGHT,
+            leadIcon = true,
+            nameSize = "sizeRow",
+            subSize = "sizeRowSub",
+        })
         row:SetPoint("RIGHT", card, "RIGHT", -6, 0)
         if prev then
             row:SetPoint("TOPLEFT", prev, "BOTTOMLEFT", 0, -ROW_GAP)
@@ -57,8 +76,9 @@ function ResultsCard.New(parent, option, index, isLast, affixes)
             row:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
         end
 
+        row:SetLeadIcon(run.dungeon.texture)
         row.nameText:SetText(run.dungeon.name or "?")
-        row.subText:SetText(string.format("Key %d - complete in %s (or faster) - %s", run.level, FormatTime(run.time), ChestLabel(run.chestLevel)))
+        row.subText:SetText(RunDetails(run))
         row.iconStrip:SetIcons(AffixIcons(affixes))
         row.valueDelta:SetValueDelta(math.floor(run.newScore + 0.5), math.floor(run.newScore - run.oldScore + 0.5))
         row:SetAccentColor("borderAccent")

@@ -11,6 +11,7 @@ local MainWindow = PP.MainWindow
 
 local WINDOW_WIDTH = 560
 local WINDOW_HEIGHT = 560
+local STAT_GAP = 8
 
 local window
 local statCurrent, statTarget, statGap
@@ -178,15 +179,16 @@ local function Build()
     charRating = Theme:CreateFontString(content, "size", "textDim")
     charRating:SetPoint("LEFT", charName, "RIGHT", 10, 0)
 
-    -- Summary stat cells
-    statCurrent = PP.Widgets.StatCell.New(content, { label = "CURRENT", width = 120 })
+    -- Summary stat cells, split evenly across the full content width.
+    local statWidth = (WINDOW_WIDTH - Theme.insets.panel * 2 - STAT_GAP * 2) / 3
+    statCurrent = PP.Widgets.StatCell.New(content, { label = "CURRENT", width = statWidth })
     statCurrent:SetPoint("TOPLEFT", charName, "BOTTOMLEFT", 0, -10)
 
-    statTarget = PP.Widgets.StatCell.New(content, { label = "TARGET", width = 120 })
-    statTarget:SetPoint("LEFT", statCurrent, "RIGHT", 8, 0)
+    statTarget = PP.Widgets.StatCell.New(content, { label = "TARGET", width = statWidth })
+    statTarget:SetPoint("LEFT", statCurrent, "RIGHT", STAT_GAP, 0)
 
-    statGap = PP.Widgets.StatCell.New(content, { label = "GAP", width = 120 })
-    statGap:SetPoint("LEFT", statTarget, "RIGHT", 8, 0)
+    statGap = PP.Widgets.StatCell.New(content, { label = "GAP", width = statWidth })
+    statGap:SetPoint("LEFT", statTarget, "RIGHT", STAT_GAP, 0)
 
     -- Input row
     targetInput = PP.Widgets.EditBox.New(content, { label = "Target Rating", numeric = true, width = 120 })

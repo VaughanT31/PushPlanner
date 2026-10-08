@@ -11,6 +11,8 @@ local ListRow = PP.Widgets.ListRow
 
 local ACCENT_WIDTH = 3
 local ICON_SIZE = 14
+-- Optional leading dungeon/item icon (opts.leadIcon), inset from the row's top and bottom edges.
+local LEAD_ICON_INSET = 4
 
 function ListRow.CreateAccentBar(parent, colorKey)
     local bar = parent:CreateTexture(nil, "ARTWORK")
@@ -89,11 +91,29 @@ function ListRow.New(parent, opts)
 
     local accent = ListRow.CreateAccentBar(row, opts.accentColorKey)
 
-    local name = Theme:CreateFontString(row, "size", "text")
-    name:SetPoint("LEFT", row, "LEFT", ACCENT_WIDTH + 8, 6)
+    -- Text starts right of the accent bar, or right of the lead icon when the row has one.
+    local textX = ACCENT_WIDTH + 8
+    local leadIcon
+    if opts.leadIcon then
+        local size = height - LEAD_ICON_INSET * 2
+        local iconBorder = CreateFrame("Frame", nil, row)
+        iconBorder:SetSize(size + 2, size + 2)
+        iconBorder:SetPoint("LEFT", row, "LEFT", ACCENT_WIDTH + LEAD_ICON_INSET, 0)
+        Theme:SetBorderColor(Theme:CreateBorder(iconBorder, "OVERLAY"), "border")
 
-    local sub = Theme:CreateFontString(row, "sizeSmall", "textDim")
-    sub:SetPoint("LEFT", row, "LEFT", ACCENT_WIDTH + 8, -6)
+        leadIcon = iconBorder:CreateTexture(nil, "ARTWORK")
+        leadIcon:SetPoint("TOPLEFT", iconBorder, "TOPLEFT", 1, -1)
+        leadIcon:SetPoint("BOTTOMRIGHT", iconBorder, "BOTTOMRIGHT", -1, 1)
+        -- Trim the default icon frame edge so it sits flush inside the hairline border.
+        leadIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        textX = ACCENT_WIDTH + LEAD_ICON_INSET + size + 2 + 8
+    end
+
+    local name = Theme:CreateFontString(row, opts.nameSize or "size", "text")
+    name:SetPoint("BOTTOMLEFT", row, "LEFT", textX, 1)
+
+    local sub = Theme:CreateFontString(row, opts.subSize or "sizeSmall", "textDim")
+    sub:SetPoint("TOPLEFT", row, "LEFT", textX, -2)
 
     local iconStrip = ListRow.CreateIconStrip(row)
     iconStrip:SetPoint("RIGHT", row, "RIGHT", -90, 0)
@@ -102,6 +122,7 @@ function ListRow.New(parent, opts)
     valueDelta:SetPoint("RIGHT", row, "RIGHT", -8, 0)
 
     row.accent = accent
+    row.leadIcon = leadIcon
     row.nameText = name
     row.subText = sub
     row.iconStrip = iconStrip
@@ -109,6 +130,12 @@ function ListRow.New(parent, opts)
 
     function row:SetAccentColor(colorKey)
         accent:SetVertexColor(unpack(Theme.colors[colorKey] or Theme.colors.accentDefault))
+    end
+
+    function row:SetLeadIcon(texture)
+        if leadIcon then
+            leadIcon:SetTexture(texture or "Interface\\Icons\\INV_Misc_QuestionMark")
+        end
     end
 
     return row

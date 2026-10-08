@@ -38,6 +38,9 @@ PP.Theme = {
         sizeSmall = 10,
         sizeLarge = 16,
         sizeTitle = 14,
+        -- Result rows: a step up from size/sizeSmall so the run details read at a glance.
+        sizeRow = 13,
+        sizeRowSub = 11,
     },
 
     insets = {
@@ -141,5 +144,8 @@ function PP.Theme:CreateFontString(parent, sizeKey, colorKey, layer)
     fs:SetFont(self:GetFont(), size, "")
     local c = self.colors[colorKey or "text"]
     fs:SetTextColor(unpack(c))
+    -- Soft drop shadow lifts text off the darker panel fills.
+    fs:SetShadowColor(0, 0, 0, 0.9)
+    fs:SetShadowOffset(1, -1)
     return fs
 end
