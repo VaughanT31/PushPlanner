@@ -1,4 +1,4 @@
-## Interface: 121500
+## Interface: 120105
 ## Title: PushPlanner
 ## Notes: Set a target Mythic+ rating and see the minimum keys needed to reach it. Concept and math ported with thanks from Mythic Planner (mythicplanner.com) and SamFarah/RatingCalculator (github.com/SamFarah/RatingCalculator).
 ## Author: CtrlShift_Zed
