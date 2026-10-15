@@ -3,30 +3,31 @@
 An in-game port of [mythicplanner.com](https://mythicplanner.com/) /
 [SamFarah/RatingCalculator](https://github.com/SamFarah/RatingCalculator).
 Set a target Mythic+ rating and see the minimum keystone runs needed to
-reach it, read live from your own character. No website, no login, no
-typing name/realm.
+reach it, read live from your character. No website, no login.
 
-Targets World of Warcraft: Midnight 12.1.0 (Curse of Ula'tek), Interface
-120100. Standalone addon, no dependencies, no embedded libraries.
+Targets World of Warcraft: Midnight 12.1 (Season 2). Standalone addon, no
+dependencies, no embedded libraries.
 
-## Status
+## Plan for someone else
 
-Scaffolded per `scope.md` (milestones M0-M5): widget toolkit and theme,
-data layer, scoring/planner engine ported from the source projects, main
-window, minimap button, settings panel, saved variables, localization
-scaffold and attribution files are all in place.
+The "Plan for" picker at the top of the window plans for:
 
-Not yet done:
-- `Data/SeasonScoring.lua`'s `baseByLevel` table and timing-bonus constants
-  were checked against Mr. Mythical's Midnight Season 2 rating calculator
-  (2026-08-31); one error was found and fixed (level 4 was 200, should be
-  185). `overtimeFlat` and the `GetMin` over-10 floor are still unconfirmed
-  against a live/authoritative source (see scope.md section 11, risk 1).
-- Exact API return signatures in `Core/Data.lua` should be checked against
-  the 12.1.0 API dump.
-- Only the addon/minimap icon (`Media/icon.tga`) is custom art so far;
-  panels are still flat colour fills rather than image-based skins.
-- No automated test harness wired up (section 10 of scope.md).
+- **Me**, read live from your character.
+- **Your target or a party member**, from the Mythic+ summary the game shares
+  for players in your group or targeted.
+- **Anyone by name** (`Name-Realm`), from the Raider.IO addon's own data when
+  it's installed. Optional: nothing else needs it. Its data can be a few days old.
+- **Typed in**: each dungeon's best key level and whether it was timed.
+
+Right-click a player (unit frames, chat names, friends, guild) and pick
+*Plan their Mythic+ push* to open the planner for them.
+
+## Top parse bands
+
+Each planned run shows the key levels the top Warcraft Logs parses of your spec
+come from in that dungeon (`Data/ParseBands.lua`, small per-spec aggregates,
+no player names). Built with the RecommendedStats data tools and refreshed with
+each release.
 
 ## Usage
 

@@ -31,11 +31,23 @@ end
 
 -- "+12  |  under 33:00  |  2 chests", key level in the title gold so it's the first thing
 -- the eye lands on, separators dimmed so they don't compete with the values.
-local function RunDetails(run)
+-- band: { low, median, high, amount, parses } from Data/ParseBands.lua, or nil.
+local function RunDetails(run, band)
     -- "||" is an escaped literal pipe, then "|r" closes the colour.
     local sep = "  |cff" .. Hex("accentDefault") .. "|||r  "
-    return string.format("|cff%s+%d|r%sunder %s%s%s",
+    local text = string.format("|cff%s+%d|r%sunder %s%s%s",
         Hex("textTitle"), run.level, sep, FormatTime(run.time), sep, ChestLabel(run.chestLevel))
+    if band then
+        local range = band[1] == band[3] and ("+" .. band[1]) or ("+" .. band[1] .. " to +" .. band[3])
+        text = text .. sep .. "|cff" .. Hex("textDim") .. "top parses " .. range .. "|r"
+    end
+    return text
+end
+
+local function ShortAmount(amount)
+    if amount >= 1e6 then return string.format("%.2fM", amount / 1e6) end
+    if amount >= 1e3 then return string.format("%.0fK", amount / 1e3) end
+    return tostring(amount)
 end
 
 local function AffixIcons(dungeonAffixes)
@@ -47,7 +59,8 @@ local function AffixIcons(dungeonAffixes)
 end
 
 -- option: { runs = { { dungeon, level, time, newScore, oldScore, chestLevel }, ... }, dungeonCount }
-function ResultsCard.New(parent, option, index, isLast, affixes)
+-- bands: the planned-for spec's parse bands ({ [mapID] = band }), or nil.
+function ResultsCard.New(parent, option, index, isLast, affixes, bands)
     local titleLabel = index == 1 and "Option 1 (Fastest)" or ("Option " .. index)
     if isLast then
         titleLabel = titleLabel .. " (Easiest)"
@@ -78,7 +91,16 @@ function ResultsCard.New(parent, option, index, isLast, affixes)
 
         row:SetLeadIcon(run.dungeon.texture)
         row.nameText:SetText(run.dungeon.name or "?")
-        row.subText:SetText(RunDetails(run))
+        local band = bands and bands[run.dungeon.mapID]
+        row.subText:SetText(RunDetails(run, band))
+        if band then
+            row:EnableMouse(true)
+            row:SetScript("OnEnter", function(self)
+                PP.ShowTip(self, string.format("Top %d parses of your spec here came from +%d to +%d keys (median +%d), at a median of %s. Updated %s.",
+                    band[5], band[1], band[3], band[2], ShortAmount(band[4]), PP.ParseBands.updated or "?"), "ANCHOR_TOP")
+            end)
+            row:SetScript("OnLeave", function() PP.HideTip() end)
+        end
         row.iconStrip:SetIcons(AffixIcons(affixes))
         row.valueDelta:SetValueDelta(math.floor(run.newScore + 0.5), math.floor(run.newScore - run.oldScore + 0.5))
         row:SetAccentColor("borderAccent")

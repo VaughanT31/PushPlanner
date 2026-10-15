@@ -1,5 +1,5 @@
 -- PushPlanner - Core/Planner.lua
--- Greedy min-runs planner, ported from RcService.cs (scope.md section 8.7).
+-- Greedy min-runs planner, ported from RcService.cs (SamFarah/RatingCalculator).
 -- Pure function over data passed in - no WoW API calls here either.
 
 local _, PP = ...

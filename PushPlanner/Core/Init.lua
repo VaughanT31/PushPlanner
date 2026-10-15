@@ -5,7 +5,7 @@ local ADDON_NAME, PP = ...
 _G.PP = PP
 
 PP.name = "PushPlanner"
-PP.version = "1.2.0"
+PP.version = "1.3.0"
 
 PP.Widgets = PP.Widgets or {}
 PP.L = PP.L or {}
@@ -14,6 +14,8 @@ local DB_DEFAULTS = {
     targetRating = 0,
     avoidedDungeons = {},
     maxKeyLevel = 20,
+    -- Typed-in runs for "Plan for: Type it in": { [mapID] = { level, timed } }.
+    manualRuns = {},
     rememberInputs = true,
     minimap = {
         hide = false,

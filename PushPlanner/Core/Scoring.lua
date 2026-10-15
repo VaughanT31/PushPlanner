@@ -1,5 +1,5 @@
 -- PushPlanner - Core/Scoring.lua
--- Pure score model, ported 1:1 from RcService.cs (scope.md section 8.1-8.2).
+-- Pure score model, ported 1:1 from RcService.cs (SamFarah/RatingCalculator).
 -- No WoW API calls in this file - keep it a pure function library so it can
 -- be unit tested outside the client.
 

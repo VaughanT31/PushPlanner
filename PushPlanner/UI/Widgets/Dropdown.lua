@@ -1,7 +1,9 @@
 -- PushPlanner - UI/Widgets/Dropdown.lua
 -- PP.Widgets.Dropdown: a custom multi-select dropdown (the "Avoid Dungeons"
 -- selector). Not Blizzard's UIDropDownMenu - our own popout list of
--- checkboxes so it matches the house skin.
+-- checkboxes so it matches the house skin. opts.single = true makes it a
+-- pick-one list ("Plan for"): a click selects that item and closes it, and
+-- onChanged gets the picked value.
 
 local _, PP = ...
 local Theme = PP.Theme
@@ -99,6 +101,15 @@ function Dropdown.New(parent, opts)
             row.label:SetText(item.text)
             row:SetChecked(selected[item.value] and true or false)
             row:SetScript("OnClick", function(self)
+                if opts.single then
+                    selected = { [item.value] = true }
+                    UpdateButtonText()
+                    CloseOpenDropdown()
+                    if opts.onChanged then
+                        opts.onChanged(item.value, item)
+                    end
+                    return
+                end
                 self:SetChecked(not self:IsChecked())
                 selected[item.value] = self:IsChecked() or nil
                 UpdateButtonText()
@@ -119,6 +130,9 @@ function Dropdown.New(parent, opts)
     end
 
     button:SetScript("OnClick", function()
+        if opts.onOpen then
+            opts.onOpen(frame)
+        end
         if popout:IsShown() then
             CloseOpenDropdown()
             return
