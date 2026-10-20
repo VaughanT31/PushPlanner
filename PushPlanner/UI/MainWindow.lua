@@ -228,7 +228,9 @@ local function PickerValue()
     return subject.kind
 end
 
-function MainWindow:SetSubject(newSubject, extraChoice)
+-- fromDone: called by the Edit runs panel's Done, which must not open
+-- that panel again when no runs were typed.
+function MainWindow:SetSubject(newSubject, extraChoice, fromDone)
     subject = newSubject or { kind = "me" }
     if extraChoice then RefreshChoices(extraChoice) end
     planFor:SetSelected({ PickerValue() })
@@ -238,8 +240,8 @@ function MainWindow:SetSubject(newSubject, extraChoice)
         ShowEmptyState("Type their name and realm (Zed-Draenor), then Look up. This uses the Raider.IO addon's data, so it needs that addon installed.", "textDim")
         nameInput.box:SetFocus()
     elseif subject.kind == "manual" and not next(PP.db.manualRuns or {}) then
-        ShowEmptyState("Click Edit runs and type each dungeon's best key level, then Calculate.", "textDim")
-        MainWindow:ShowManualPanel()
+        ShowEmptyState("No runs typed in yet. Click Edit runs and type each dungeon's best key level.", "textDim")
+        if not fromDone then MainWindow:ShowManualPanel() end
     else
         MainWindow:Calculate()
     end
@@ -275,7 +277,12 @@ local function BuildManualPanel()
     manualPanel:SetAllPoints(viewport)
     manualPanel:SetFrameLevel(viewport:GetFrameLevel() + 20)
     Theme:SkinPanel(manualPanel, "panel", "borderAccent")
+    local fill = Theme.colors.panel
+    manualPanel:SetBackdropColor(fill[1], fill[2], fill[3], 1)
     manualPanel:EnableMouse(true)
+    -- The plan underneath stays hidden while the runs are edited.
+    manualPanel:SetScript("OnShow", function() scrollContent:Hide() end)
+    manualPanel:SetScript("OnHide", function() scrollContent:Show() end)
     manualPanel:Hide()
 
     local title = Theme:CreateFontString(manualPanel, "size", "textTitle")
@@ -295,14 +302,23 @@ local function BuildManualPanel()
         end
         PP.db.manualRuns = runs
         manualPanel:Hide()
-        MainWindow:SetSubject({ kind = "manual" })
+        MainWindow:SetSubject({ kind = "manual" }, nil, true)
     end })
     done:SetPoint("BOTTOMRIGHT", -10, 8)
 end
 
 function MainWindow:ShowManualPanel()
     if not manualPanel then BuildManualPanel() end
+    -- Nothing typed yet: start from your own season bests, as a base to
+    -- change for a what-if.
     local typed = PP.db.manualRuns or {}
+    if not next(typed) then
+        typed = {}
+        for _, d in ipairs(dungeonCache) do
+            local best = PP.Data.GetBestRun(d.mapID)
+            if best and best.level then typed[d.mapID] = { level = best.level, timed = best.timed } end
+        end
+    end
     for i, d in ipairs(dungeonCache) do
         local row = manualPanel.rows[i]
         if not row then
@@ -417,10 +433,10 @@ local function Build()
     settings:SetHeight(SETTINGS_HEIGHT)
     Theme:SkinPanel(settings, "panel", "border")
 
-    targetInput = PP.Widgets.EditBox.New(settings, { label = "Target Rating", numeric = true, width = 100 })
+    targetInput = PP.Widgets.EditBox.New(settings, { label = "Target Rating", numeric = true, width = 90 })
     targetInput:SetPoint("TOPLEFT", settings, "TOPLEFT", 10, -8)
 
-    maxLevelInput = PP.Widgets.EditBox.New(settings, { label = "Max Level", numeric = true, width = 70 })
+    maxLevelInput = PP.Widgets.EditBox.New(settings, { label = "Max Level", numeric = true, width = 64 })
     maxLevelInput:SetPoint("LEFT", targetInput, "RIGHT", 8, 0)
 
     avoidDropdown = PP.Widgets.Dropdown.New(settings, { label = "Avoid Dungeons", width = 150, emptyText = "None" })
@@ -432,13 +448,16 @@ local function Build()
         checked = PP.db.rememberInputs,
         onChanged = function(checked) PP.db.rememberInputs = checked end,
     })
-    rememberCheckbox:SetPoint("LEFT", avoidDropdown.button, "RIGHT", 12, 0)
 
     calculateButton = PP.Widgets.Button.New(settings, { text = "Calculate", width = 96, accent = true, onClick = function()
         MainWindow:Calculate()
     end })
     calculateButton:SetPoint("TOP", avoidDropdown.button, "TOP", 0, 0)
     calculateButton:SetPoint("RIGHT", settings, "RIGHT", -10, 0)
+    -- Remember sits just left of Calculate, sized to its label, so the two
+    -- never overlap whatever the font.
+    rememberCheckbox:SetWidth(16 + 6 + math.max(64, math.ceil(rememberCheckbox.label:GetStringWidth() or 0)))
+    rememberCheckbox:SetPoint("RIGHT", calculateButton, "LEFT", -14, 0)
 
     -- By name: name box and Look up, on the second line.
     nameInput = PP.Widgets.EditBox.New(settings, { width = 220, height = 22, maxLetters = 60 })

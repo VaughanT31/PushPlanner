@@ -8,6 +8,8 @@
 - **Colour at a glance:** Current takes your rating's colour, Target is gold, and Gap turns green once you're there.
 - **Fixed:** some boxes, dropdowns and checkboxes were missing a side of their border at some UI scales. Borders are now always one full screen pixel.
 - Proper tick marks in checkboxes and dropdown lists, which also highlight the row under your mouse.
+- **Typed-in runs start from your own season bests,** so a what-if only needs the dungeons you change. The plan underneath is hidden while you edit.
+- **Fixed:** pressing Done on the typed-in runs with nothing filled in opened the panel straight back up.
 
 ## 1.3.1
 

@@ -24,6 +24,11 @@ function Button.New(parent, opts)
 
     local text = Theme:CreateFontString(frame, "size", textKey)
     text:SetPoint("CENTER")
+    if accent then
+        -- Dark text on the gold fill reads cleaner without a drop shadow.
+        text:SetShadowOffset(0, 0)
+        text:SetShadowColor(0, 0, 0, 0)
+    end
     text:SetText(opts.text or "")
 
     frame:SetScript("OnEnter", function() frame:SetBackdropColor(unpack(Theme.colors[hoverKey])) end)
