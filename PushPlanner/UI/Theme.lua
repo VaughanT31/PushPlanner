@@ -10,7 +10,7 @@ local WHITE8X8 = "Interface\\Buttons\\WHITE8x8"
 
 PP.Theme = {
     colors = {
-        bg = { 0.05, 0.05, 0.06, 0.92 },
+        bg = { 0.043, 0.047, 0.063, 0.97 },
         panel = { 0.09, 0.09, 0.11, 0.95 },
         panelAlt = { 0.12, 0.12, 0.14, 0.95 },
         border = { 0.20, 0.20, 0.24, 1 },
@@ -59,27 +59,25 @@ function PP.Theme:GetFont()
     return override or self.font.normal
 end
 
--- Applies a flat colour backdrop with a thin border to any frame that was
--- created with the "BackdropTemplate" template (or inherits one).
--- Solid colour fill via SetBackdrop, but the border is drawn as four
--- explicit 1px textures rather than a backdrop edgeFile. A generic solid
--- texture used as edgeFile tiles unreliably at 1px (it can drop an edge
--- entirely). Pixel-grid snapping is also disabled on each hairline, since
--- a snapped 1px texture can round away to 0px on whichever edge lands on
--- a fractional pixel at the current UI scale (any edge, not just one).
-local function NoSnap(tex)
-    if tex.SetSnapToPixelGrid then
-        tex:SetSnapToPixelGrid(false)
+-- One real screen pixel in this frame's units. A border 1 unit thick is
+-- less than a pixel below 1.0 UI scale, and with pixel snapping turned off
+-- (as before 1.4.0) an edge that fell between two pixels faded or vanished:
+-- the missing sides on boxes and dropdowns. A whole pixel, snapped, keeps
+-- all four (the same fix as Recommended Stats' windows).
+function PP.Theme:PixelSize(frame)
+    local scale = frame and frame.GetEffectiveScale and frame:GetEffectiveScale() or 1
+    if PixelUtil and PixelUtil.GetNearestPixelSize and scale > 0 then
+        return PixelUtil.GetNearestPixelSize(1, scale, 1)
     end
-    if tex.SetTexelSnappingBias then
-        tex:SetTexelSnappingBias(0)
-    end
+    return 1
 end
 
--- Builds the four 1px hairline textures around a frame's edges (top,
--- bottom, left, right) and returns them as a table. Reused by SkinPanel
--- and by anything (like the minimap button) that needs the same ring
--- without the backdrop fill.
+local EDGES = { "top", "bottom", "left", "right" }
+
+-- Builds the four hairline textures around a frame's edges (top, bottom,
+-- left, right), one screen pixel thick, and returns them as a table.
+-- Reused by SkinPanel and by anything that needs the same ring without the
+-- backdrop fill.
 function PP.Theme:CreateBorder(frame, layer)
     local borders = {}
 
@@ -107,17 +105,24 @@ function PP.Theme:CreateBorder(frame, layer)
     borders.right:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
     borders.right:SetWidth(1)
 
-    for _, tex in pairs(borders) do
-        NoSnap(tex)
-    end
-
+    self:FitBorder(borders, frame)
     return borders
+end
+
+-- Resizes the hairlines to one screen pixel (the scale can change after
+-- the frame is built, so SkinPanel calls this again).
+function PP.Theme:FitBorder(borders, frame)
+    local edge = self:PixelSize(frame)
+    borders.top:SetHeight(edge)
+    borders.bottom:SetHeight(edge)
+    borders.left:SetWidth(edge)
+    borders.right:SetWidth(edge)
 end
 
 function PP.Theme:SetBorderColor(borders, colorKey)
     local color = self.colors[colorKey or "border"]
-    for _, tex in pairs(borders) do
-        tex:SetVertexColor(unpack(color))
+    for _, edge in ipairs(EDGES) do
+        borders[edge]:SetVertexColor(unpack(color))
     end
 end
 
@@ -133,9 +138,23 @@ function PP.Theme:SkinPanel(frame, colorKey, borderKey)
 
     if not frame.ppBorders then
         frame.ppBorders = self:CreateBorder(frame, "BORDER")
+    else
+        self:FitBorder(frame.ppBorders, frame)
     end
 
     self:SetBorderColor(frame.ppBorders, borderKey)
+end
+
+-- A coloured strip along the top edge of a panel (stat cells, panel
+-- headings), two screen pixels tall.
+function PP.Theme:AccentStrip(frame, colorKey)
+    local strip = frame:CreateTexture(nil, "ARTWORK")
+    strip:SetTexture(self.texture.white)
+    strip:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+    strip:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
+    strip:SetHeight(self:PixelSize(frame) * 2)
+    strip:SetVertexColor(unpack(self.colors[colorKey or "borderAccent"]))
+    return strip
 end
 
 function PP.Theme:CreateFontString(parent, sizeKey, colorKey, layer)

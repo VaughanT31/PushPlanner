@@ -33,6 +33,7 @@ function ProgressBar.New(parent, opts)
     frame.marker = marker
 
     local minValue, maxValue = 0, 1
+    local lastValue, lastTarget
 
     local function ClampPct(value)
         if maxValue <= minValue then return 0 end
@@ -47,12 +48,14 @@ function ProgressBar.New(parent, opts)
     end
 
     function frame:SetValue(value)
+        lastValue = value
         local width = frame:GetWidth() - 2
         local pct = ClampPct(value)
         fill:SetWidth(math.max(width * pct, 1))
     end
 
     function frame:SetTarget(value)
+        lastTarget = value
         local width = frame:GetWidth() - 2
         local pct = ClampPct(value)
         marker:ClearAllPoints()
@@ -60,6 +63,12 @@ function ProgressBar.New(parent, opts)
         marker:SetPoint("BOTTOM", frame, "BOTTOMLEFT", 1 + width * pct, -2)
         marker:Show()
     end
+
+    -- Anchored bars get their width after the first layout: redraw then.
+    frame:SetScript("OnSizeChanged", function()
+        if lastValue then frame:SetValue(lastValue) end
+        if lastTarget then frame:SetTarget(lastTarget) end
+    end)
 
     return frame
 end

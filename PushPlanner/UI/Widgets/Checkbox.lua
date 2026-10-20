@@ -21,9 +21,12 @@ function Checkbox.New(parent, opts)
     box:SetPoint("LEFT", frame, "LEFT", 0, 0)
     Theme:SkinPanel(box, "panelAlt", "border")
 
-    local check = Theme:CreateFontString(box, "size", "textTitle")
-    check:SetPoint("CENTER")
-    check:SetText("X")
+    -- The game's own tick, in the title gold.
+    local check = box:CreateTexture(nil, "OVERLAY")
+    check:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
+    check:SetPoint("CENTER", box, "CENTER", 1, 0)
+    check:SetSize(BOX_SIZE + 4, BOX_SIZE + 4)
+    check:SetVertexColor(unpack(Theme.colors.textTitle))
     check:Hide()
 
     local label = Theme:CreateFontString(frame, "size", "text")
@@ -50,6 +53,9 @@ function Checkbox.New(parent, opts)
             opts.onChanged(checked)
         end
     end)
+
+    frame:SetScript("OnEnter", function() label:SetTextColor(unpack(Theme.colors.textTitle)) end)
+    frame:SetScript("OnLeave", function() label:SetTextColor(unpack(Theme.colors.text)) end)
 
     frame.box = box
     frame.label = label

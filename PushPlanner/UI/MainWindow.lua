@@ -14,6 +14,9 @@ local MainWindow = PP.MainWindow
 local WINDOW_WIDTH = 560
 local WINDOW_HEIGHT = 560
 local STAT_GAP = 8
+local SETTINGS_HEIGHT = 58
+local SETTINGS_HEIGHT_TWO_LINES = 88
+local PROGRESS_TEXT_WIDTH = 120
 
 local window
 local statCurrent, statTarget, statGap
@@ -28,6 +31,7 @@ local eventFrame
 local scrollOffset = 0
 local planFor, nameInput, lookupButton, editRunsButton, sourceText
 local manualPanel
+local progress, progressText, settings, resultsTitle
 local subject = { kind = "me" }
 local subjectData, subjectError
 
@@ -91,12 +95,23 @@ local function RefreshHeader()
     nameInput:SetShown(subject.kind == "name")
     lookupButton:SetShown(subject.kind == "name")
     editRunsButton:SetShown(subject.kind == "manual")
+    local twoLines = subject.kind == "name" or subject.kind == "manual"
+    settings:SetHeight(twoLines and SETTINGS_HEIGHT_TWO_LINES or SETTINGS_HEIGHT)
 
     statCurrent:SetValue(tostring(rating))
+    statCurrent:SetAccent(color)
     local target = PP.db.targetRating or 0
     statTarget:SetValue(tostring(target))
     local gap = target - rating
     statGap:SetValue(tostring(math.max(gap, 0)), gap > 0 and "warn" or "good")
+    statGap:SetAccent(gap > 0 and "warn" or "good")
+
+    -- Progress towards the target.
+    progress:SetMinMax(0, math.max(target, 1))
+    progress:SetValue(rating)
+    local pct = target > 0 and math.min(100, math.floor(rating / target * 100)) or 0
+    progressText:SetText(target > 0 and (pct >= 100 and "Target reached" or (pct .. "% of the way")) or "")
+    resultsTitle:SetText(target > 0 and ("WAYS TO REACH " .. target) or "WAYS TO GET THERE")
 
     return rating, target
 end
@@ -373,64 +388,93 @@ local function Build()
     sourceText:SetPoint("RIGHT", planLabel, "LEFT", -10, 0)
     sourceText:SetJustifyH("LEFT")
 
-    -- Summary stat cells, split evenly across the full content width.
+    -- Summary stat cells, split evenly across the full content width, each
+    -- with a coloured strip on top.
     local statWidth = (WINDOW_WIDTH - Theme.insets.panel * 2 - STAT_GAP * 2) / 3
     statCurrent = PP.Widgets.StatCell.New(content, { label = "CURRENT", width = statWidth })
     statCurrent:SetPoint("TOPLEFT", charName, "BOTTOMLEFT", 0, -10)
 
-    statTarget = PP.Widgets.StatCell.New(content, { label = "TARGET", width = statWidth })
+    statTarget = PP.Widgets.StatCell.New(content, { label = "TARGET", width = statWidth, accent = "textTitle" })
     statTarget:SetPoint("LEFT", statCurrent, "RIGHT", STAT_GAP, 0)
 
-    statGap = PP.Widgets.StatCell.New(content, { label = "GAP", width = statWidth })
+    statGap = PP.Widgets.StatCell.New(content, { label = "GAP", width = statWidth, accent = "warn" })
     statGap:SetPoint("LEFT", statTarget, "RIGHT", STAT_GAP, 0)
 
-    -- Input row
-    targetInput = PP.Widgets.EditBox.New(content, { label = "Target Rating", numeric = true, width = 120 })
-    targetInput:SetPoint("TOPLEFT", statCurrent, "BOTTOMLEFT", 0, -14)
+    -- Progress from the current rating to the target.
+    progress = PP.Widgets.ProgressBar.New(content, { height = 8 })
+    progress:SetPoint("TOPLEFT", statCurrent, "BOTTOMLEFT", 0, -10)
+    progress:SetPoint("RIGHT", content, "RIGHT", -PROGRESS_TEXT_WIDTH, 0)
+    progressText = Theme:CreateFontString(content, "sizeSmall", "textDim")
+    progressText:SetPoint("LEFT", progress, "RIGHT", 8, 0)
+    progressText:SetPoint("RIGHT", content, "RIGHT", 0, 0)
+    progressText:SetJustifyH("RIGHT")
 
-    maxLevelInput = PP.Widgets.EditBox.New(content, { label = "Max Level", numeric = true, width = 90 })
+    -- Settings: one framed row with Calculate at its end. A second line
+    -- holds the name box (Plan for: By name) or Edit runs (Type it in).
+    settings = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    settings:SetPoint("TOPLEFT", progress, "BOTTOMLEFT", 0, -12)
+    settings:SetPoint("RIGHT", content, "RIGHT", 0, 0)
+    settings:SetHeight(SETTINGS_HEIGHT)
+    Theme:SkinPanel(settings, "panel", "border")
+
+    targetInput = PP.Widgets.EditBox.New(settings, { label = "Target Rating", numeric = true, width = 100 })
+    targetInput:SetPoint("TOPLEFT", settings, "TOPLEFT", 10, -8)
+
+    maxLevelInput = PP.Widgets.EditBox.New(settings, { label = "Max Level", numeric = true, width = 70 })
     maxLevelInput:SetPoint("LEFT", targetInput, "RIGHT", 8, 0)
 
-    avoidDropdown = PP.Widgets.Dropdown.New(content, { label = "Avoid Dungeons", width = 150, emptyText = "None" })
+    avoidDropdown = PP.Widgets.Dropdown.New(settings, { label = "Avoid Dungeons", width = 150, emptyText = "None" })
     avoidDropdown:SetPoint("LEFT", maxLevelInput, "RIGHT", 8, 0)
 
-    rememberCheckbox = PP.Widgets.Checkbox.New(content, {
+    rememberCheckbox = PP.Widgets.Checkbox.New(settings, {
         label = "Remember",
+        width = 84,
         checked = PP.db.rememberInputs,
         onChanged = function(checked) PP.db.rememberInputs = checked end,
     })
-    rememberCheckbox:SetPoint("LEFT", avoidDropdown, "RIGHT", 10, 4)
+    rememberCheckbox:SetPoint("LEFT", avoidDropdown.button, "RIGHT", 12, 0)
 
-    calculateButton = PP.Widgets.Button.New(content, { text = "Calculate", width = 100, accent = true, onClick = function()
+    calculateButton = PP.Widgets.Button.New(settings, { text = "Calculate", width = 96, accent = true, onClick = function()
         MainWindow:Calculate()
     end })
-    calculateButton:SetPoint("TOPLEFT", targetInput, "BOTTOMLEFT", 0, -14)
+    calculateButton:SetPoint("TOP", avoidDropdown.button, "TOP", 0, 0)
+    calculateButton:SetPoint("RIGHT", settings, "RIGHT", -10, 0)
 
-    -- By name: name box and Look up, beside Calculate.
-    nameInput = PP.Widgets.EditBox.New(content, { width = 200, height = 22, maxLetters = 60 })
+    -- By name: name box and Look up, on the second line.
+    nameInput = PP.Widgets.EditBox.New(settings, { width = 220, height = 22, maxLetters = 60 })
     nameInput.label:Hide()
     nameInput.box:ClearAllPoints()
     nameInput.box:SetAllPoints(nameInput)
-    nameInput:SetPoint("LEFT", calculateButton, "RIGHT", 12, 0)
+    nameInput:SetPoint("TOPLEFT", targetInput, "BOTTOMLEFT", 0, -8)
     nameInput.box:SetScript("OnEnterPressed", function() LookUp() end)
     nameInput:Hide()
-    lookupButton = PP.Widgets.Button.New(content, { text = "Look up", width = 80, onClick = LookUp })
+    lookupButton = PP.Widgets.Button.New(settings, { text = "Look up", width = 80, onClick = LookUp })
     lookupButton:SetPoint("LEFT", nameInput, "RIGHT", 6, 0)
     lookupButton:Hide()
 
-    editRunsButton = PP.Widgets.Button.New(content, { text = "Edit runs", width = 90, onClick = function()
+    editRunsButton = PP.Widgets.Button.New(settings, { text = "Edit runs", width = 90, onClick = function()
         MainWindow:ShowManualPanel()
     end })
-    editRunsButton:SetPoint("LEFT", calculateButton, "RIGHT", 12, 0)
+    editRunsButton:SetPoint("TOPLEFT", targetInput, "BOTTOMLEFT", 0, -8)
     editRunsButton:Hide()
 
-    -- Results area. A plain frame that clips its children, not a Blizzard
-    -- ScrollFrame - scrolling is just moving scrollContent's anchor offset
-    -- (see ClampScroll/ResetScroll above), fully under our own control.
-    viewport = CreateFrame("Frame", nil, content)
-    viewport:SetPoint("TOPLEFT", calculateButton, "BOTTOMLEFT", 0, -12)
-    viewport:SetPoint("RIGHT", content, "RIGHT", 0, 0)
-    viewport:SetPoint("BOTTOM", content, "BOTTOM", 0, 26)
+    -- Results: a framed panel with a heading. A plain frame inside clips
+    -- the cards, not a Blizzard ScrollFrame - scrolling is just moving
+    -- scrollContent's anchor offset (see ClampScroll/ResetScroll above),
+    -- fully under our own control.
+    local results = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    results:SetPoint("TOPLEFT", settings, "BOTTOMLEFT", 0, -10)
+    results:SetPoint("RIGHT", content, "RIGHT", 0, 0)
+    results:SetPoint("BOTTOM", content, "BOTTOM", 0, 20)
+    Theme:SkinPanel(results, "panel", "border")
+    Theme:AccentStrip(results, "borderAccent")
+    resultsTitle = Theme:CreateFontString(results, "sizeSmall", "textTitle")
+    resultsTitle:SetPoint("TOPLEFT", results, "TOPLEFT", 10, -9)
+    resultsTitle:SetText("WAYS TO GET THERE")
+
+    viewport = CreateFrame("Frame", nil, results)
+    viewport:SetPoint("TOPLEFT", results, "TOPLEFT", 8, -28)
+    viewport:SetPoint("BOTTOMRIGHT", results, "BOTTOMRIGHT", -8, 8)
     viewport:SetClipsChildren(true)
     viewport:EnableMouseWheel(true)
     viewport:SetScript("OnMouseWheel", function(_, delta)
@@ -462,6 +506,11 @@ local function Build()
     eventFrame:SetScript("OnEvent", function(_, event)
         if event == "CHALLENGE_MODE_MAPS_UPDATE" then
             LoadDungeons()
+            -- The season's dungeons arrived after opening: plan now.
+            if #cards == 0 and (subject.kind == "me" or subject.kind == "unit") then
+                MainWindow:Calculate()
+                return
+            end
         elseif event == "GROUP_ROSTER_UPDATE" or event == "PLAYER_TARGET_CHANGED" then
             -- Someone else's numbers may only arrive once they're in range.
             if subject.kind == "unit" then LoadSubject() end
@@ -480,6 +529,11 @@ local function Build()
         LoadDungeons()
         MainWindow:RefreshInputs()
         RefreshHeader()
+        -- Show a plan straight away instead of an empty panel.
+        if subject.kind == "me" or subject.kind == "unit"
+            or (subject.kind == "manual" and next(PP.db.manualRuns or {})) then
+            MainWindow:Calculate()
+        end
     end)
     window:SetScript("OnHide", function()
         eventFrame:UnregisterAllEvents()

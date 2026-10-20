@@ -54,6 +54,8 @@ function Dropdown.New(parent, opts)
     button:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
     button:SetHeight(22)
     Theme:SkinPanel(button, "panelAlt", "border")
+    button:SetScript("OnEnter", function() Theme:SkinPanel(button, "hover", "borderAccent") end)
+    button:SetScript("OnLeave", function() Theme:SkinPanel(button, "panelAlt", "border") end)
 
     local buttonText = Theme:CreateFontString(button, "size", "text")
     buttonText:SetPoint("LEFT", button, "LEFT", 6, 0)
@@ -94,8 +96,17 @@ function Dropdown.New(parent, opts)
         for i, item in ipairs(items) do
             local row = popout.rows[i]
             if not row then
-                row = PP.Widgets.Checkbox.New(popout, { label = item.text })
+                row = PP.Widgets.Checkbox.New(popout, { label = item.text, width = (opts.width or 160) - 12 })
                 row:SetPoint("LEFT", popout, "LEFT", 6, 0)
+                -- A soft highlight across the whole row on hover.
+                local hover = row:CreateTexture(nil, "BACKGROUND")
+                hover:SetTexture(Theme.texture.white)
+                hover:SetPoint("TOPLEFT", row, "TOPLEFT", -4, 2)
+                hover:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", 4, -2)
+                hover:SetVertexColor(unpack(Theme.colors.hover))
+                hover:Hide()
+                row:HookScript("OnEnter", function() hover:Show() end)
+                row:HookScript("OnLeave", function() hover:Hide() end)
                 popout.rows[i] = row
             end
             row.label:SetText(item.text)
@@ -120,7 +131,7 @@ function Dropdown.New(parent, opts)
             row:ClearAllPoints()
             row:SetPoint("LEFT", popout, "LEFT", 6, 0)
             if prev then
-                row:SetPoint("TOP", prev, "BOTTOM", 0, -2)
+                row:SetPoint("TOP", prev, "BOTTOM", 0, -4)
             else
                 row:SetPoint("TOP", popout, "TOP", 0, -6)
             end
