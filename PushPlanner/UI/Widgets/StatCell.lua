@@ -22,14 +22,28 @@ function StatCell.New(parent, opts)
     value:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 8, 6)
     value:SetText(opts.value or "-")
 
+    local note = Theme:CreateFontString(frame, "sizeSmall", "textDim")
+    note:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -8, 8)
+    note:SetJustifyH("RIGHT")
+
     frame.label = label
     frame.value = value
+    frame.note = note
     frame.strip = strip
 
     -- The strip's colour; a { r, g, b } table or a theme colour key.
     function frame:SetAccent(color)
         local c = type(color) == "table" and color or Theme.colors[color] or Theme.colors.borderAccent
         strip:SetVertexColor(c[1], c[2], c[3], 1)
+    end
+
+    function frame:SetLabel(text)
+        label:SetText(text)
+    end
+
+    function frame:SetNote(text, colorKey)
+        note:SetText(text or "")
+        note:SetTextColor(unpack(Theme.colors[colorKey or "textDim"] or Theme.colors.textDim))
     end
 
     function frame:SetValue(text, colorKey)

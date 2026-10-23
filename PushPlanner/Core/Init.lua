@@ -5,7 +5,7 @@ local ADDON_NAME, PP = ...
 _G.PP = PP
 
 PP.name = "PushPlanner"
-PP.version = "1.4.0"
+PP.version = "1.5.0"
 
 PP.Widgets = PP.Widgets or {}
 PP.L = PP.L or {}

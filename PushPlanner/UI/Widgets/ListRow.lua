@@ -117,6 +117,13 @@ function ListRow.New(parent, opts)
 
     local iconStrip = ListRow.CreateIconStrip(row)
     iconStrip:SetPoint("RIGHT", row, "RIGHT", -90, 0)
+    -- Long names and sub-labels end before the icons rather than under them.
+    name:SetPoint("RIGHT", iconStrip, "LEFT", -8, 0)
+    name:SetJustifyH("LEFT")
+    name:SetWordWrap(false)
+    sub:SetPoint("RIGHT", iconStrip, "LEFT", -8, 0)
+    sub:SetJustifyH("LEFT")
+    sub:SetWordWrap(false)
 
     local valueDelta = ListRow.CreateValueDelta(row)
     valueDelta:SetPoint("RIGHT", row, "RIGHT", -8, 0)

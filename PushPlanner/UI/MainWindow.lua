@@ -11,15 +11,18 @@ local L = PP.L
 PP.MainWindow = {}
 local MainWindow = PP.MainWindow
 
-local WINDOW_WIDTH = 560
-local WINDOW_HEIGHT = 560
+local WINDOW_WIDTH = 680
+local WINDOW_HEIGHT = 600
 local STAT_GAP = 8
 local SETTINGS_HEIGHT = 58
 local SETTINGS_HEIGHT_TWO_LINES = 88
 local PROGRESS_TEXT_WIDTH = 120
+local KEYS_HEIGHT = 50
+local MAX_KEYS = 5
 
 local window
-local statCurrent, statTarget, statGap
+local statCurrent, statTarget, statGap, statTop
+local keysPanel, keyChips, resultsPanel
 local charName, charRating
 local targetInput, maxLevelInput, avoidDropdown, rememberCheckbox, calculateButton
 local viewport, scrollContent
@@ -105,6 +108,24 @@ local function RefreshHeader()
     local gap = target - rating
     statGap:SetValue(tostring(math.max(gap, 0)), gap > 0 and "warn" or "good")
     statGap:SetAccent(gap > 0 and "warn" or "good")
+
+    -- How close to the top 1% of the region (Data/Cutoffs.lua, from Raider.IO).
+    local regionCutoffs = PP.Cutoffs and PP.Cutoffs.regions[GetCurrentRegion and GetCurrentRegion() or 0]
+    local top = regionCutoffs and regionCutoffs.p990
+    if top then
+        local cutoff = math.floor(top + 0.5)
+        statTop:SetValue(tostring(cutoff), "text")
+        if rating >= cutoff then
+            statTop:SetNote("You're in!", "good")
+            statTop:SetAccent("good")
+        else
+            statTop:SetNote((cutoff - rating) .. " to go", "warn")
+            statTop:SetAccent("textTitle")
+        end
+    else
+        statTop:SetValue("-", "textDim")
+        statTop:SetNote("")
+    end
 
     -- Progress towards the target.
     progress:SetMinMax(0, math.max(target, 1))
@@ -406,7 +427,7 @@ local function Build()
 
     -- Summary stat cells, split evenly across the full content width, each
     -- with a coloured strip on top.
-    local statWidth = (WINDOW_WIDTH - Theme.insets.panel * 2 - STAT_GAP * 2) / 3
+    local statWidth = (WINDOW_WIDTH - Theme.insets.panel * 2 - STAT_GAP * 3) / 4
     statCurrent = PP.Widgets.StatCell.New(content, { label = "CURRENT", width = statWidth })
     statCurrent:SetPoint("TOPLEFT", charName, "BOTTOMLEFT", 0, -10)
 
@@ -415,6 +436,20 @@ local function Build()
 
     statGap = PP.Widgets.StatCell.New(content, { label = "GAP", width = statWidth, accent = "warn" })
     statGap:SetPoint("LEFT", statTarget, "RIGHT", STAT_GAP, 0)
+
+    statTop = PP.Widgets.StatCell.New(content, { label = "TOP 1%", width = statWidth, accent = "textTitle" })
+    statTop:SetPoint("LEFT", statGap, "RIGHT", STAT_GAP, 0)
+    statTop:EnableMouse(true)
+    statTop:SetScript("OnEnter", function(self)
+        local c = PP.Cutoffs and PP.Cutoffs.regions[GetCurrentRegion and GetCurrentRegion() or 0]
+        if not c then return end
+        local lines = { "Rating cutoffs this season (Raider.IO, " .. PP.Cutoffs.updated .. "):" }
+        for _, row in ipairs({ { "p999", "Top 0.1%" }, { "p990", "Top 1%" }, { "p900", "Top 10%" }, { "p750", "Top 25%" } }) do
+            if c[row[1]] then lines[#lines + 1] = row[2] .. ": " .. math.floor(c[row[1]] + 0.5) end
+        end
+        PP.ShowTip(self, table.concat(lines, "\n"), "ANCHOR_BOTTOM")
+    end)
+    statTop:SetScript("OnLeave", function() PP.HideTip() end)
 
     -- Progress from the current rating to the target.
     progress = PP.Widgets.ProgressBar.New(content, { height = 8 })
@@ -481,7 +516,40 @@ local function Build()
     -- the cards, not a Blizzard ScrollFrame - scrolling is just moving
     -- scrollContent's anchor offset (see ClampScroll/ResetScroll above),
     -- fully under our own control.
+    -- Group keys: one chip per group member, shown while you're in a group.
+    keysPanel = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    keysPanel:SetPoint("TOPLEFT", settings, "BOTTOMLEFT", 0, -10)
+    keysPanel:SetPoint("RIGHT", content, "RIGHT", 0, 0)
+    keysPanel:SetHeight(KEYS_HEIGHT)
+    Theme:SkinPanel(keysPanel, "panel", "border")
+    local keysTitle = Theme:CreateFontString(keysPanel, "sizeSmall", "textTitle")
+    keysTitle:SetPoint("TOPLEFT", keysPanel, "TOPLEFT", 10, -6)
+    keysTitle:SetText("GROUP KEYS")
+    keyChips = {}
+    local chipWidth = (WINDOW_WIDTH - Theme.insets.panel * 2 - 20 - (MAX_KEYS - 1) * 6) / MAX_KEYS
+    for i = 1, MAX_KEYS do
+        local chip = CreateFrame("Frame", nil, keysPanel)
+        chip:SetSize(chipWidth, 30)
+        chip:SetPoint("TOPLEFT", keysPanel, "TOPLEFT", 10 + (i - 1) * (chipWidth + 6), -18)
+        chip.name = Theme:CreateFontString(chip, "sizeSmall", "text")
+        chip.name:SetPoint("TOPLEFT", chip, "TOPLEFT", 0, 0)
+        chip.name:SetPoint("RIGHT", chip, "RIGHT", 0, 0)
+        chip.name:SetJustifyH("LEFT")
+        chip.name:SetWordWrap(false)
+        chip.key = Theme:CreateFontString(chip, "sizeSmall", "textDim")
+        chip.key:SetPoint("TOPLEFT", chip.name, "BOTTOMLEFT", 0, -2)
+        chip.key:SetPoint("RIGHT", chip, "RIGHT", 0, 0)
+        chip.key:SetJustifyH("LEFT")
+        chip.key:SetWordWrap(false)
+        chip:EnableMouse(true)
+        chip:SetScript("OnEnter", function(self) if self.tip then PP.ShowTip(self, self.tip, "ANCHOR_BOTTOM") end end)
+        chip:SetScript("OnLeave", function() PP.HideTip() end)
+        keyChips[i] = chip
+    end
+    keysPanel:Hide()
+
     local results = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    resultsPanel = results
     results:SetPoint("TOPLEFT", settings, "BOTTOMLEFT", 0, -10)
     results:SetPoint("RIGHT", content, "RIGHT", 0, 0)
     results:SetPoint("BOTTOM", content, "BOTTOM", 0, 20)
@@ -533,11 +601,18 @@ local function Build()
         elseif event == "GROUP_ROSTER_UPDATE" or event == "PLAYER_TARGET_CHANGED" then
             -- Someone else's numbers may only arrive once they're in range.
             if subject.kind == "unit" then LoadSubject() end
+            if event == "GROUP_ROSTER_UPDATE" then MainWindow:RefreshKeys() end
         end
         RefreshHeader()
     end)
 
+    PP.Keys.OnChange(function()
+        if window and window:IsShown() then MainWindow:RefreshKeys() end
+    end)
+
     window:SetScript("OnShow", function()
+        PP.Keys.Request()
+        MainWindow:RefreshKeys()
         eventFrame:RegisterEvent("CHALLENGE_MODE_MAPS_UPDATE")
         eventFrame:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE")
         eventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
@@ -557,6 +632,58 @@ local function Build()
     window:SetScript("OnHide", function()
         eventFrame:UnregisterAllEvents()
     end)
+end
+
+-- What a timed run of this key would add to the planned-for player's
+-- rating (their best on that dungeon is replaced if it's higher).
+local function KeyGain(level, mapID)
+    local d
+    for _, dungeon in ipairs(dungeonCache) do
+        if dungeon.mapID == mapID then d = dungeon end
+    end
+    if not (d and d.timeLimit and subjectData and subjectData.scores) then return nil, d end
+    local new = PP.Scoring.GetRunScore(d.timeLimit * 0.95, d.timeLimit, level)
+    return math.max(0, math.floor(new - (subjectData.scores[mapID] or 0) + 0.5)), d
+end
+
+function MainWindow:RefreshKeys()
+    if not keysPanel then return end
+    local inGroup = IsInGroup() and not IsInRaid()
+    keysPanel:SetShown(inGroup)
+    resultsPanel:ClearAllPoints()
+    resultsPanel:SetPoint("TOPLEFT", inGroup and keysPanel or settings, "BOTTOMLEFT", 0, -10)
+    resultsPanel:SetPoint("RIGHT", window.content, "RIGHT", 0, 0)
+    resultsPanel:SetPoint("BOTTOM", window.content, "BOTTOM", 0, 20)
+    if not inGroup then return end
+    local list = PP.Keys.List()
+    for i, chip in ipairs(keyChips) do
+        local k = list[i]
+        chip:SetShown(k ~= nil)
+        if k then
+            local _, classFile = UnitClass(k.me and "player" or k.unit)
+            local c = classFile and RAID_CLASS_COLORS and RAID_CLASS_COLORS[classFile]
+            chip.name:SetText(k.name)
+            chip.name:SetTextColor(c and c.r or 1, c and c.g or 1, c and c.b or 1)
+            if not k.known then
+                chip.key:SetText("|cff888888no reply yet|r")
+                chip.tip = k.name .. " hasn't shared a key. They need Push Planner, or an addon with LibKeystone such as BigWigs."
+            elseif (k.level or 0) == 0 then
+                chip.key:SetText("|cff888888no key|r")
+                chip.tip = k.name .. " has no keystone."
+            else
+                local gain, d = KeyGain(k.level, k.mapID)
+                local dungeon = d and d.name or (C_ChallengeMode.GetMapUIInfo(k.mapID)) or "?"
+                chip.key:SetText(("|cffffd100+%d|r %s"):format(k.level, dungeon))
+                local tip = ("%s: +%d %s"):format(k.name, k.level, dungeon)
+                if k.rating and k.rating > 0 then tip = tip .. "\nRating " .. k.rating end
+                if gain then
+                    tip = tip .. "\n" .. (gain > 0 and ("Timed, it would add about +" .. gain .. " rating for " .. SubjectName() .. ".")
+                        or ("Timed, it wouldn't raise " .. SubjectName() .. "'s rating."))
+                end
+                chip.tip = tip
+            end
+        end
+    end
 end
 
 function MainWindow:Toggle()

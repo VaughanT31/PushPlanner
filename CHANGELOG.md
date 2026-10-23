@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0
+
+- **Your group's keys:** in a group, a *Group keys* strip shows the keystone each member holds. Hover one to see what timing it would add to the rating of whoever you're planning for. Group members who run Push Planner share their keys with each other automatically, and so do players running an addon that includes LibKeystone, such as BigWigs, when you have one too. Neither is required.
+- **How close to the top 1%:** a new *TOP 1%* box shows this season's top 1% rating for your region and how many points you still need. Hover it for the top 0.1%, 10% and 25% too. The numbers come from Raider.IO and are updated with each release.
+- **A wider window:** long dungeon names and run details no longer run under the icons, and there's room for the new boxes.
+
 ## 1.4.0
 
 - **A cleaner window:** the settings sit in one panel with Calculate at the end of the row, and the plan has its own framed panel with a heading (*Ways to reach 3600*).
