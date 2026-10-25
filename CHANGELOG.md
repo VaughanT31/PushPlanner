@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.1
+
+- **Fresh numbers:** this season's top 1% and top 0.1% ratings per region from Raider.IO, and the key levels and output top players reach in each dungeon, read again from Warcraft Logs.
+
 ## 1.5.0
 
 - **Your group's keys:** in a group, a *Group keys* strip shows the keystone each member holds. Hover one to see what timing it would add to the rating of whoever you're planning for. Group members who run Push Planner share their keys with each other automatically, and so do players running an addon that includes LibKeystone, such as BigWigs, when you have one too. Neither is required.
