@@ -5,6 +5,8 @@ An in-game port of [mythicplanner.com](https://mythicplanner.com/) /
 Set a target Mythic+ rating and see the minimum keystone runs needed to
 reach it, read live from your character. No website, no login.
 
+**New here?** The [wiki](wiki/Home.md) explains every feature step by step (also on the [website](https://ctrlshiftzed.com/wiki/push-planner/)). Questions it doesn't answer: ask on [Discord](https://discord.gg/wz7fw6jM9Z).
+
 Targets World of Warcraft: Midnight 12.1 (Season 2). Standalone addon, no
 dependencies, no embedded libraries.
 
