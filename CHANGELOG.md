@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.2
+
+- **Fresh cutoffs:** today's top 1%, top 0.1%, 10%, 25% and 40% ratings per region from Raider.IO, so the *TOP 1%* box shows how far you are from the line as it stands now.
+
 ## 1.5.1
 
 - **Fresh numbers:** this season's top 1% and top 0.1% ratings per region from Raider.IO, and the key levels and output top players reach in each dungeon, read again from Warcraft Logs.
