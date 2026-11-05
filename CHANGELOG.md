@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.9
+
+- **Update checks in addon managers:** the addon now carries its CurseForge project ID, so addon managers that read it can match it to CurseForge and tell you when an update is out.
+
 ## 1.5.8
 
 - **Fresh dungeon numbers:** the key levels and output top players reach in each dungeon, read again from Warcraft Logs.

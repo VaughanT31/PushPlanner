@@ -2,12 +2,13 @@
 ## Title: PushPlanner
 ## Notes: Set a target Mythic+ rating and see the minimum keys needed to reach it. Concept and math ported with thanks from Mythic Planner (mythicplanner.com) and SamFarah/RatingCalculator (github.com/SamFarah/RatingCalculator).
 ## Author: CtrlShift_Zed
-## Version: 1.5.8
+## Version: 1.5.9
 ## Category: CtrlShift_Zed
 ## SavedVariables: PushPlannerDB
 ## IconTexture: Interface\AddOns\PushPlanner\Media\icon
 ## X-Credits: Mythic Planner (mythicplanner.com); SamFarah/RatingCalculator (MIT)
 ## X-License: MIT
+## X-Curse-Project-ID: 1659830
 
 Core\Init.lua
 Data\SeasonScoring.lua
