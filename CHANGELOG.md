@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.15
+
+- **Fresh dungeon numbers:** the key levels and output top players reach in each dungeon, read again from Warcraft Logs.
+
 ## 1.5.14
 
 - **Fresh dungeon numbers:** the key levels and output top players reach in each dungeon, read again from Warcraft Logs.
