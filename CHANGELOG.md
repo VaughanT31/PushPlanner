@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.6.1
+## 1.6.2
 
 - **Fresh dungeon numbers:** the key levels and output top players reach in each dungeon, read again from Warcraft Logs.
 - **Fresh cutoffs:** today's top 1%, top 0.1%, 10%, 25% and 40% ratings per region from Raider.IO, so the *TOP 1%* box shows how far you are from the line as it stands now.
