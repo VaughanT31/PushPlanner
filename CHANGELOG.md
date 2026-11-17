@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.0
+
+- **Next best run on the minimap button:** hover it to see the lowest key that raises your rating if you time it, and how much it adds, for example "Next best run: +11 Ara-Kara (+18)". With a target set it also shows the fewest runs to reach it. It uses your avoided dungeons and max key level from the planner.
+
 ## 1.5.15
 
 - **Fresh dungeon numbers:** the key levels and output top players reach in each dungeon, read again from Warcraft Logs.

@@ -37,6 +37,8 @@ each release.
 - `/pp config` - open settings
 - `/pp reset` - clear target rating, max level and avoided dungeons
 
+Hover the minimap button for your rating, your next best run (the lowest key that raises your rating if you time it, for example *+11 Ara-Kara (+18)*) and, with a target set, the fewest runs to reach it.
+
 ## Credit
 
 Calculation logic and concept ported with thanks from Mythic Planner

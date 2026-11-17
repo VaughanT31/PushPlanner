@@ -124,3 +124,27 @@ function Planner.Plan(dungeons, current, target, avoidSet, maxLevel)
     local status = #options > 0 and "ok" or "unreachable"
     return { status = status, options = options, gap = gap }
 end
+
+-- The easiest single run that raises the rating: the lowest key level that
+-- beats a dungeon's current score when timed right on the timer, and of
+-- those, the biggest gain. Returns { dungeon, level, gain } or nil.
+-- dungeons: array of { mapID, name, timeLimit, score }
+function Planner.BestNextRun(dungeons, avoidSet, maxLevel)
+    avoidSet = avoidSet or {}
+    maxLevel = maxLevel or 20
+    local best
+    for _, d in ipairs(dungeons) do
+        if not avoidSet[d.mapID] then
+            for level = 2, maxLevel do
+                local gain = Scoring.GetBase(level) - (d.score or 0)
+                if gain > 0 then
+                    if not best or level < best.level or (level == best.level and gain > best.gain) then
+                        best = { dungeon = d, level = level, gain = gain }
+                    end
+                    break
+                end
+            end
+        end
+    end
+    return best
+end

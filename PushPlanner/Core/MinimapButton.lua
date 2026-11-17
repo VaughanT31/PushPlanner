@@ -80,6 +80,7 @@ function MinimapButton:Init()
                 message = message .. " (target " .. target .. " reached)"
             end
         end
+        message = message .. MinimapButton.NextRunText(rating, target)
         message = message .. "\nLeft-click to plan\nRight-click for settings"
 
         PP.ShowTip(button, message, "ANCHOR_TOP")
@@ -89,6 +90,37 @@ function MinimapButton:Init()
     end)
 
     UpdatePosition(PP.db.minimap.angle or 200)
+end
+
+-- "Next best run: +11 Ara-Kara (+18)" and, with a target, the fewest runs
+-- to reach it, from your own season bests. Empty until the game has sent
+-- the season's dungeons.
+function MinimapButton.NextRunText(rating, target)
+    local dungeons = PP.Data.GetSeasonDungeons()
+    if #dungeons == 0 then return "" end
+    local data = PP.Subjects.Load({ kind = "me" }, dungeons)
+    if not data then return "" end
+    for _, d in ipairs(dungeons) do d.score = data.scores[d.mapID] or 0 end
+    local avoidSet = {}
+    for _, mapID in ipairs(PP.db.avoidedDungeons or {}) do avoidSet[mapID] = true end
+    local maxLevel = PP.db.maxKeyLevel or 20
+
+    local text = ""
+    local next = PP.Planner.BestNextRun(dungeons, avoidSet, maxLevel)
+    if next then
+        text = text .. ("\nNext best run: +%d %s (+%d)"):format(next.level, next.dungeon.name or "?", math.floor(next.gain + 0.5))
+    end
+    if target > rating then
+        local plan = PP.Planner.Plan(dungeons, data.rating or rating, target, avoidSet, maxLevel)
+        local fewest
+        for _, option in ipairs(plan.options or {}) do
+            if not fewest or option.dungeonCount < fewest then fewest = option.dungeonCount end
+        end
+        if fewest then
+            text = text .. ("\nFewest runs to %d: %d"):format(target, fewest)
+        end
+    end
+    return text
 end
 
 function MinimapButton:SetShown(shown)
